@@ -1,0 +1,18 @@
+
+
+git add .
+
+git commit -m "Reference point: stable version with new departments (Nov 3, 2025)"
+
+git tag -a v1.0-reference -m "Reference version before adding new features"
+
+
+git push origin main
+
+git push origin v1.0-reference
+
+
+git checkout main
+git reset --hard v1.0-reference
+git push origin main --force
+

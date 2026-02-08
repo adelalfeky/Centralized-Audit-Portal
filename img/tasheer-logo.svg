@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="60" viewBox="0 0 260 60" role="img" aria-label="Tasheer logo">
+  <defs>
+    <style>
+      .brand-blue { fill: #1f57a6; }
+      .brand-text { font-family: 'Inter', Arial, sans-serif; font-weight:700; fill:#0b1b3b; }
+    </style>
+  </defs>
+  <!-- simple shield + chevron mark -->
+  <g transform="translate(6,6)">
+    <rect class="brand-blue" x="0" y="0" width="44" height="20" rx="2"/>
+    <path class="brand-blue" d="M0 22 L22 44 L44 22 L34 12 L10 12 Z"/>
+  </g>
+  <!-- Text to the right -->
+  <g transform="translate(60,36)">
+    <text class="brand-text" font-size="18">Tasheer</text>
+  </g>
+</svg>
