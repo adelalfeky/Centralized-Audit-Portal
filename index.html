@@ -350,9 +350,57 @@
                         </table>
                     </div>
                 </div>
+                
+                <!-- Uploaded Files from Directors -->
+                <div class="bg-white card-shadow rounded-lg overflow-hidden mt-6">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-download text-green-600 text-xl mr-3"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Uploaded Files from Directors</h3>
+                                    <p class="text-sm text-gray-600">View and manage files uploaded by department directors to shared folders</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Filter by Department -->
+                        <div class="mb-6 flex gap-3 items-center flex-wrap">
+                            <label class="text-sm font-medium text-gray-700">Filter by Department:</label>
+                            <select id="admin-files-dept-filter" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="all">All Departments</option>
+                                <!-- Options will be populated from departments -->
+                            </select>
+                            <button id="admin-refresh-files-btn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center text-sm">
+                                <i class="fas fa-sync-alt mr-2"></i> Refresh
+                            </button>
+                        </div>
+                        
+                        <!-- Files List -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Director</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-uploaded-files-table" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 text-sm">No files uploaded yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Director Dashboard -->
             <div id="director-dashboard" class="hidden">
                 <!-- Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -517,10 +565,62 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Shared Folder Upload Section -->
+                <div class="bg-white card-shadow rounded-lg overflow-hidden mt-6">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-cloud-upload-alt text-blue-600 text-xl mr-3"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Shared Folder - File Upload</h3>
+                                    <p class="text-sm text-gray-600">Upload supporting documents to the shared department folder</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Shared Folder Info -->
+                        <div class="mb-6 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Local Folder Path</p>
+                                    <p class="text-sm font-mono text-gray-700 mt-1" id="shared-folder-path-display">
+                                        <i class="fas fa-folder mr-2 text-gray-500"></i>Not configured
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Shared Folder URL</p>
+                                    <p class="text-sm font-mono text-gray-700 mt-1" id="shared-folder-url-display">
+                                        <i class="fas fa-link mr-2 text-gray-500"></i>Not configured
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Area -->
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer" id="upload-drop-zone">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-700 font-medium mb-1">Drag and drop files here or click to select</p>
+                            <p class="text-sm text-gray-500">Supported: PDF, Word, Excel, Images (Max 10MB per file)</p>
+                            <input type="file" id="shared-folder-upload" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp">
+                        </div>
+                        
+                        <!-- Uploaded Files List -->
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-file-archive mr-2 text-gray-600"></i>
+                                Uploaded Files
+                            </h4>
+                            <div id="uploaded-files-list" class="space-y-2 bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                <p class="text-gray-500 italic text-sm">No files uploaded yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <!-- Modals -->
         <!-- Update Requirement Modal (for directors) -->
         <div id="update-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white slide-in">
@@ -1084,15 +1184,18 @@
             if (!localStorage.getItem('auditPortalActivities')) {
                 localStorage.setItem('auditPortalActivities', JSON.stringify([]));
             }
+            
+            // Load uploaded files if exists
+            if (!localStorage.getItem('auditPortalUploadedFiles')) {
+                localStorage.setItem('auditPortalUploadedFiles', JSON.stringify({}));
+            }
 
             // Load data into app state
             appState.users = JSON.parse(localStorage.getItem('auditPortalUsers'));
             appState.departments = JSON.parse(localStorage.getItem('auditPortalDepartments'));
             appState.fileSystem = JSON.parse(localStorage.getItem('auditPortalFileSystem'));
             appState.activities = JSON.parse(localStorage.getItem('auditPortalActivities'));
-            
-            // Initialize uploaded files storage
-            appState.uploadedFiles = {};
+            appState.uploadedFiles = JSON.parse(localStorage.getItem('auditPortalUploadedFiles'));
             
             // Initialize shared folder configuration
             if (!localStorage.getItem('auditPortalFolderConfig')) {
@@ -1470,6 +1573,43 @@
             
             // Load folder configuration table
             loadFolderConfigTable();
+            
+            // Load uploaded files table and setup filters
+            loadUploadedFilesForAdmin();
+            setupAdminFileFilters();
+        }
+        
+        // Setup admin file filters
+        function setupAdminFileFilters() {
+            const deptFilter = document.getElementById('admin-files-dept-filter');
+            const refreshBtn = document.getElementById('admin-refresh-files-btn');
+            
+            if (deptFilter) {
+                // Clear existing options except "All"
+                while (deptFilter.options.length > 1) {
+                    deptFilter.remove(1);
+                }
+                
+                // Add department options
+                appState.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    deptFilter.appendChild(option);
+                });
+                
+                // Add change event listener
+                deptFilter.addEventListener('change', () => {
+                    loadUploadedFilesForAdmin();
+                });
+            }
+            
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    loadUploadedFilesForAdmin();
+                    showToast('Files list refreshed');
+                });
+            }
         }
         
         // Load folder configuration table
@@ -1478,17 +1618,22 @@
             
             appState.departments.forEach(dept => {
                 const folderPath = appState.folderConfig[dept.id]?.path || '';
-                const isConfigured = folderPath !== '';
+                const sharedUrl = appState.folderConfig[dept.id]?.sharedUrl || '';
+                const isConfigured = (folderPath !== '' || sharedUrl !== '');
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${dept.name}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">
-                        <span class="font-mono text-xs">${folderPath || '<span class="text-gray-400 italic">Not configured</span>'}</span>
+                        <div class="space-y-2">
+                            ${folderPath ? `<div class="font-mono text-xs bg-gray-50 p-2 rounded"><i class="fas fa-folder mr-1"></i>${folderPath}</div>` : ''}
+                            ${sharedUrl ? `<div class="font-mono text-xs bg-blue-50 p-2 rounded"><i class="fas fa-link mr-1"></i><a href="${sharedUrl}" target="_blank" class="text-blue-600 hover:text-blue-800">${sharedUrl.length > 50 ? sharedUrl.substring(0, 50) + '...' : sharedUrl}</a></div>` : ''}
+                            ${!folderPath && !sharedUrl ? '<span class="text-gray-400 italic">Not configured</span>' : ''}
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 text-xs font-medium rounded ${isConfigured ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                            ${isConfigured ? 'Configured' : 'Pending'}
+                            ${isConfigured ? '✓ Configured' : '○ Pending'}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1658,6 +1803,9 @@
             
             // Load activity feed
             loadActivityFeed(dept.id);
+            
+            // Initialize shared folder upload
+            initializeSharedFolderUpload();
             
             // Setup event listeners for director dashboard
             setupDirectorEventListeners(dept);
@@ -2594,10 +2742,20 @@
         }
 
         // Show toast notification
-        function showToast(message) {
+        function showToast(message, type = 'success') {
             const toast = confirmationToast;
             const toastMessage = toast.querySelector('p:first-child');
             toastMessage.textContent = message;
+            
+            // Update toast styling based on type
+            toast.classList.remove('bg-green-600', 'bg-red-600', 'bg-blue-600');
+            if (type === 'error') {
+                toast.classList.add('bg-red-600');
+            } else if (type === 'warning') {
+                toast.classList.add('bg-yellow-600');
+            } else {
+                toast.classList.add('bg-green-600');
+            }
             
             toast.classList.remove('hidden');
             
@@ -2651,24 +2809,49 @@
             
             appState.departments.forEach(dept => {
                 const currentPath = appState.folderConfig[dept.id]?.path || '';
+                const currentUrl = appState.folderConfig[dept.id]?.sharedUrl || '';
                 
                 const configItem = document.createElement('div');
-                configItem.className = 'border border-gray-200 rounded-lg p-4';
+                configItem.className = 'border border-gray-200 rounded-lg p-5 space-y-4';
                 configItem.innerHTML = `
-                    <div class="mb-3">
-                        <h5 class="font-medium text-gray-800">${dept.name}</h5>
-                        <p class="text-sm text-gray-500">Configure the root shared folder for this department</p>
+                    <div class="pb-3 border-b border-gray-100">
+                        <h5 class="font-semibold text-gray-900 text-lg">${dept.name}</h5>
+                        <p class="text-sm text-gray-500">Configure folder paths and shared URLs</p>
                     </div>
-                    <div class="flex gap-2">
+                    
+                    <!-- Local Folder Path -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-folder mr-2 text-gray-600"></i>Local Folder Path
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                class="flex-1 folder-path-input border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                                data-dept="${dept.id}" 
+                                data-type="path"
+                                placeholder="E.g., D:\\Shared\\Audit\\${dept.name.replace(/\\s+/g, '_')}" 
+                                value="${currentPath}">
+                            <button class="browse-folder-btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium text-sm" data-dept="${dept.id}">
+                                <i class="fas fa-folder mr-1"></i> Browse
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Local server path for storing uploaded files</p>
+                    </div>
+                    
+                    <!-- Shared Folder URL -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-link mr-2 text-gray-600"></i>Shared Folder URL
+                        </label>
                         <input 
                             type="text" 
-                            class="flex-1 folder-path-input border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            class="w-full folder-url-input border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
                             data-dept="${dept.id}" 
-                            placeholder="E.g., D:\\Shared\\${dept.name.replace(/\\s+/g, '_')}\\" 
-                            value="${currentPath}">
-                        <button class="browse-folder-btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium" data-dept="${dept.id}">
-                            <i class="fas fa-folder mr-1"></i> Browse
-                        </button>
+                            data-type="url"
+                            placeholder="E.g., https://sharepoint.company.com/sites/audit/${dept.name.replace(/\\s+/g, '_')} or \\\\\\\\SERVER\\\\Audit\\\\${dept.name.replace(/\\s+/g, '_')}" 
+                            value="${currentUrl}">
+                        <p class="text-xs text-gray-500 mt-1">SharePoint, OneDrive, or network share URL where directors will upload files</p>
                     </div>
                 `;
                 
@@ -2710,19 +2893,40 @@
         
         // Save folder configuration
         function saveFolderConfiguration() {
-            const inputs = document.querySelectorAll('.folder-path-input');
+            const pathInputs = document.querySelectorAll('.folder-path-input');
+            const urlInputs = document.querySelectorAll('.folder-url-input');
             let configured = false;
             
-            inputs.forEach(input => {
+            // Save paths and URLs
+            pathInputs.forEach(input => {
                 const deptId = input.dataset.dept;
                 const path = input.value.trim();
                 
-                appState.folderConfig[deptId] = {
-                    path: path,
-                    configured: path !== ''
-                };
+                if (!appState.folderConfig[deptId]) {
+                    appState.folderConfig[deptId] = {};
+                }
                 
+                appState.folderConfig[deptId].path = path;
                 if (path !== '') configured = true;
+            });
+            
+            urlInputs.forEach(input => {
+                const deptId = input.dataset.dept;
+                const url = input.value.trim();
+                
+                if (!appState.folderConfig[deptId]) {
+                    appState.folderConfig[deptId] = {};
+                }
+                
+                appState.folderConfig[deptId].sharedUrl = url;
+                if (url !== '') configured = true;
+            });
+            
+            // Mark as configured if either path or URL is provided
+            Object.keys(appState.folderConfig).forEach(deptId => {
+                const path = appState.folderConfig[deptId].path || '';
+                const url = appState.folderConfig[deptId].sharedUrl || '';
+                appState.folderConfig[deptId].configured = (path !== '' || url !== '');
             });
             
             // Save to localStorage
@@ -2742,6 +2946,284 @@
         // Close folder configuration modal
         function closeFolderConfigModal() {
             folderConfigModal.classList.add('hidden');
+        }
+
+        // Initialize shared folder upload for directors
+        function initializeSharedFolderUpload() {
+            const uploadDropZone = document.getElementById('upload-drop-zone');
+            const fileInput = document.getElementById('shared-folder-upload');
+            
+            if (!uploadDropZone || !fileInput) return;
+            
+            // Update folder info display
+            updateSharedFolderInfo();
+            
+            // Load uploaded files list
+            loadUploadedFilesForDirector();
+            
+            // Drag and drop events
+            uploadDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadDropZone.classList.add('border-blue-500', 'bg-blue-50');
+            });
+            
+            uploadDropZone.addEventListener('dragleave', () => {
+                uploadDropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            });
+            
+            uploadDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadDropZone.classList.remove('border-blue-500', 'bg-blue-50');
+                const files = e.dataTransfer.files;
+                handleSharedFolderFileUpload(files);
+            });
+            
+            // Click to upload
+            uploadDropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleSharedFolderFileUpload(e.target.files);
+            });
+        }
+        
+        // Update shared folder info display for director
+        function updateSharedFolderInfo() {
+            const user = appState.currentUser;
+            const folderPath = appState.folderConfig[user.department]?.path || '';
+            const sharedUrl = appState.folderConfig[user.department]?.sharedUrl || '';
+            
+            const pathDisplay = document.getElementById('shared-folder-path-display');
+            const urlDisplay = document.getElementById('shared-folder-url-display');
+            
+            if (pathDisplay) {
+                pathDisplay.innerHTML = folderPath ? 
+                    `<i class="fas fa-folder mr-2 text-gray-600"></i>${folderPath}` :
+                    '<i class="fas fa-folder mr-2 text-gray-400"></i><span class="text-gray-400">Not configured</span>';
+            }
+            
+            if (urlDisplay) {
+                if (sharedUrl) {
+                    urlDisplay.innerHTML = `<i class="fas fa-link mr-2 text-blue-600"></i><a href="${sharedUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 break-all">${sharedUrl}</a>`;
+                } else {
+                    urlDisplay.innerHTML = '<i class="fas fa-link mr-2 text-gray-400"></i><span class="text-gray-400">Not configured</span>';
+                }
+            }
+        }
+        
+        // Handle shared folder file upload
+        function handleSharedFolderFileUpload(files) {
+            const user = appState.currentUser;
+            if (!user || !user.department) return;
+            
+            const dept = appState.departments.find(d => d.id === user.department);
+            if (!dept) return;
+            
+            // Initialize uploaded files structure if not exists
+            if (!appState.uploadedFiles) {
+                appState.uploadedFiles = {};
+            }
+            if (!appState.uploadedFiles[dept.id]) {
+                appState.uploadedFiles[dept.id] = [];
+            }
+            
+            let filesAdded = 0;
+            
+            for (let file of files) {
+                // Validate file size (10MB limit)
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast(`File "${file.name}" exceeds 10MB limit. Skipped.`, 'error');
+                    continue;
+                }
+                
+                // Validate file type
+                const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'bmp'];
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(fileExt)) {
+                    showToast(`File type ".${fileExt}" not allowed.`, 'error');
+                    continue;
+                }
+                
+                // Create file record
+                const fileRecord = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    uploadDate: new Date().toISOString(),
+                    uploader: user.fullName,
+                    uploaderId: user.id
+                };
+                
+                appState.uploadedFiles[dept.id].push(fileRecord);
+                filesAdded++;
+            }
+            
+            if (filesAdded > 0) {
+                // Save to localStorage
+                localStorage.setItem('auditPortalUploadedFiles', JSON.stringify(appState.uploadedFiles));
+                
+                // Reload files list
+                loadUploadedFilesForDirector();
+                
+                // Show confirmation
+                showToast(`${filesAdded} file${filesAdded !== 1 ? 's' : ''} uploaded successfully!`);
+                
+                // Add activity log
+                addActivity(`Uploaded ${filesAdded} file(s) to shared folder`, user.department);
+            }
+            
+            // Clear file input
+            document.getElementById('shared-folder-upload').value = '';
+        }
+        
+        // Load uploaded files for director
+        function loadUploadedFilesForDirector() {
+            const user = appState.currentUser;
+            const dept = appState.departments.find(d => d.id === user.department);
+            const uploadedFilesList = document.getElementById('uploaded-files-list');
+            
+            if (!uploadedFilesList || !dept) return;
+            
+            const files = appState.uploadedFiles?.[dept.id] || [];
+            
+            if (files.length === 0) {
+                uploadedFilesList.innerHTML = '<p class="text-gray-500 italic text-sm">No files uploaded yet</p>';
+                return;
+            }
+            
+            uploadedFilesList.innerHTML = '';
+            
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition';
+                
+                // Get file icon
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                let fileIcon = 'fas fa-file';
+                if (['pdf'].includes(fileExt)) fileIcon = 'fas fa-file-pdf text-red-600';
+                else if (['doc', 'docx'].includes(fileExt)) fileIcon = 'fas fa-file-word text-blue-600';
+                else if (['xls', 'xlsx'].includes(fileExt)) fileIcon = 'fas fa-file-excel text-green-600';
+                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) fileIcon = 'fas fa-image text-purple-600';
+                
+                fileItem.innerHTML = `
+                    <div class="flex items-center flex-grow">
+                        <i class="${fileIcon} mr-3 text-xl"></i>
+                        <div class="flex-grow">
+                            <p class="font-medium text-gray-800 text-sm">${file.name}</p>
+                            <p class="text-xs text-gray-500">${formatFileSize(file.size)} • ${formatDate(file.uploadDate)}</p>
+                        </div>
+                    </div>
+                    <button class="delete-file-btn text-red-600 hover:text-red-800 text-sm" data-file-id="${file.id}" data-dept="${dept.id}">
+                        <i class="fas fa-trash mr-1"></i> Delete
+                    </button>
+                `;
+                
+                uploadedFilesList.appendChild(fileItem);
+            });
+            
+            // Add delete listeners
+            document.querySelectorAll('.delete-file-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const fileId = this.dataset.fileId;
+                    const deptId = this.dataset.dept;
+                    deleteUploadedFile(fileId, deptId);
+                });
+            });
+        }
+        
+        // Delete uploaded file
+        function deleteUploadedFile(fileId, deptId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            
+            if (appState.uploadedFiles && appState.uploadedFiles[deptId]) {
+                const index = appState.uploadedFiles[deptId].findIndex(f => f.id == fileId);
+                if (index !== -1) {
+                    const fileName = appState.uploadedFiles[deptId][index].name;
+                    appState.uploadedFiles[deptId].splice(index, 1);
+                    localStorage.setItem('auditPortalUploadedFiles', JSON.stringify(appState.uploadedFiles));
+                    loadUploadedFilesForDirector();
+                    loadUploadedFilesForAdmin();
+                    showToast(`File "${fileName}" deleted successfully`);
+                    addActivity(`Deleted file "${fileName}" from shared folder`, deptId);
+                }
+            }
+        }
+        
+        // Load uploaded files for admin
+        function loadUploadedFilesForAdmin() {
+            const table = document.getElementById('admin-uploaded-files-table');
+            if (!table) return;
+            
+            const filterValue = document.getElementById('admin-files-dept-filter')?.value || 'all';
+            const allFiles = [];
+            
+            // Collect all files from all departments
+            appState.departments.forEach(dept => {
+                const deptFiles = appState.uploadedFiles?.[dept.id] || [];
+                deptFiles.forEach(file => {
+                    allFiles.push({
+                        ...file,
+                        department: dept.name,
+                        departmentId: dept.id
+                    });
+                });
+            });
+            
+            // Filter by department
+            let filteredFiles = allFiles;
+            if (filterValue !== 'all') {
+                filteredFiles = allFiles.filter(f => f.departmentId === filterValue);
+            }
+            
+            // Sort by upload date (newest first)
+            filteredFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+            
+            if (filteredFiles.length === 0) {
+                table.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500 text-sm">No files uploaded</td></tr>`;
+                return;
+            }
+            
+            table.innerHTML = '';
+            
+            filteredFiles.forEach(file => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${file.department}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-file mr-2 text-gray-600"></i>
+                            ${file.name}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatFileSize(file.size)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(file.uploadDate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${file.uploader}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-red-600 hover:text-red-800 admin-delete-file-btn" data-file-id="${file.id}" data-dept="${file.departmentId}">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </td>
+                `;
+                
+                table.appendChild(row);
+            });
+            
+            // Add delete listeners
+            document.querySelectorAll('.admin-delete-file-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteUploadedFile(this.dataset.fileId, this.dataset.dept);
+                });
+            });
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
         // Show My Folder (Director)
