@@ -1,5 +1,5 @@
 module.exports = {
-  port: 1001,
+  port: 1002,
   root: ".",
   open: "index.html"
 };
