@@ -89,6 +89,60 @@ app.get('/api/test', (req, res) => {
     res.json({ status: 'ok', message: 'API is working', timestamp: new Date().toISOString() });
 });
 
+// Seed requirements from department files
+app.post('/api/seed-requirements', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        
+        // Load department files
+        const departments = [
+            { id: 2, file: './departments-corporate-it.js' },
+            { id: 3, file: './departments-data-analytics.js' },
+            { id: 4, file: './departments-infrastructure.js' },
+            { id: 5, file: './departments-platforms.js' },
+            { id: 6, file: './departments-quality-assurance.js' },
+            { id: 7, file: './departments-solution-dev.js' },
+            { id: 8, file: './departments-tech-strategy.js' }
+        ];
+        
+        let totalInserted = 0;
+        
+        for (const dept of departments) {
+            try {
+                // Dynamically require the department file
+                delete require.cache[require.resolve(dept.file)];
+                const deptData = require(dept.file);
+                const deptObj = Object.values(deptData)[0];
+                
+                if (deptObj && deptObj.requirements && Array.isArray(deptObj.requirements)) {
+                    // Insert requirements
+                    for (const req of deptObj.requirements) {
+                        await connection.execute(
+                            'INSERT INTO requirements (departmentId, description, requestDate, status) VALUES (?, ?, ?, ?)',
+                            [dept.id, req.description, req.requestDate || '2026-02-02', req.status || 'pending']
+                        );
+                    }
+                    totalInserted += deptObj.requirements.length;
+                    console.log(`✓ Seeded ${deptObj.requirements.length} requirements for department ${dept.id}`);
+                }
+            } catch (error) {
+                console.error(`Error seeding department ${dept.id}:`, error.message);
+            }
+        }
+        
+        await connection.release();
+        
+        res.json({ 
+            status: 'success', 
+            message: `Seeded ${totalInserted} requirements`,
+            count: totalInserted
+        });
+    } catch (error) {
+        console.error('Seed error:', error);
+        res.status(500).json({ error: 'Failed to seed requirements', details: error.message });
+    }
+});
+
 // ==================== User Routes ====================
 
 app.get('/api/users', async (req, res) => {

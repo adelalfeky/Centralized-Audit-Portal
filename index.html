@@ -1157,7 +1157,7 @@
                     const savedUser = localStorage.getItem('currentUser');
                     if (savedUser) {
                         appState.currentUser = JSON.parse(savedUser);
-                        showApp();
+                        await showApp();
                     }
                 } catch (e) {
                     apiClient.logout();
@@ -1295,7 +1295,7 @@
                 loginError.classList.add('hidden');
                 
                 // Show app
-                showApp();
+                await showApp();
             } catch (error) {
                 console.error('[Login] Login failed:', error);
                 loginError.classList.remove('hidden');
@@ -1366,7 +1366,7 @@
         }
 
         // Show main application
-        function showApp() {
+        async function showApp() {
             try {
                 console.log('[App] Showing app interface for user:', appState.currentUser?.username);
                 loginPage.classList.add('hidden');
@@ -1377,10 +1377,10 @@
                 
                 if (appState.currentUser.role === 'admin') {
                     console.log('[App] Loading admin dashboard');
-                    showAdminDashboard();
+                    await showAdminDashboard();
                 } else {
                     console.log('[App] Loading director dashboard');
-                    showDirectorDashboard();
+                    await showDirectorDashboard();
                 }
                 console.log('[App] Dashboard displayed successfully');
             } catch (error) {
@@ -1417,9 +1417,18 @@
         }
 
         // Show admin dashboard
-        function showAdminDashboard() {
+        async function showAdminDashboard() {
             adminDashboard.classList.remove('hidden');
             directorDashboard.classList.add('hidden');
+            
+            // Reload departments and users from API to get fresh data
+            try {
+                appState.departments = await apiClient.getDepartments();
+                appState.users = await apiClient.getUsers();
+                console.log('[Admin] Data reloaded');
+            } catch (error) {
+                console.error('[Admin] Error reloading data:', error);
+            }
             
             loadAdminStats();
             loadUsersTable();
@@ -1427,9 +1436,17 @@
         }
 
         // Show director dashboard
-        function showDirectorDashboard() {
+        async function showDirectorDashboard() {
             adminDashboard.classList.add('hidden');
             directorDashboard.classList.remove('hidden');
+            
+            // Reload departments from API to get fresh requirements data
+            try {
+                appState.departments = await apiClient.getDepartments();
+                console.log('[Director] Departments reloaded:', appState.departments);
+            } catch (error) {
+                console.error('[Director] Error reloading departments:', error);
+            }
             
             loadDirectorDashboard();
         }
@@ -1730,7 +1747,7 @@
                 const row = document.createElement('tr');
                 row.className = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${req.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${i + 1}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${req.description}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(req.requestDate)}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -2302,8 +2319,8 @@
         function exportDepartmentData(dept) {
             let csvContent = "Sr. No.,Information Requested,Request Date,Status,Remarks\n";
             
-            dept.requirements.forEach(req => {
-                csvContent += `${req.id},"${req.description}","${formatDate(req.requestDate)}","${getStatusText(req.status)}","${req.remarks || ''}"\n`;
+            dept.requirements.forEach((req, index) => {
+                csvContent += `${index + 1},"${req.description}","${formatDate(req.requestDate)}","${getStatusText(req.status)}","${req.remarks || ''}"\n`;
             });
             
             const blob = new Blob([csvContent], { type: 'text/csv' });
