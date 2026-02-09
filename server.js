@@ -654,9 +654,9 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
             return res.status(404).json({ error: 'Requirement not found' });
         }
         
-        const { files } = req.body;
+        const { files, sequenceNo } = req.body;
         
-        console.log(`[File Upload] DeptID: ${deptId}, ReqID: ${reqId}, Files received:`, files ? files.length : 0);
+        console.log(`[File Upload] DeptID: ${deptId}, ReqID: ${reqId}, SeqNo: ${sequenceNo}, Files received:`, files ? files.length : 0);
         
         if (!files || !Array.isArray(files)) {
             await connection.release();
@@ -670,24 +670,21 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
             [deptId]
         );
         
-        // Determine base path based on admin configuration
-        let baseDir;
+        // Create safe department name for folder
+        const departmentName = depts[0].name || `department_${deptId}`;
+        const safeDepartmentName = departmentName
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+            .trim()
+            .replace(/\s+/g, '_');
         
-        if (folderConfig.length > 0 && folderConfig[0].path) {
-            // Use admin-configured path
-            const configuredPath = folderConfig[0].path;
-            baseDir = path.join(configuredPath, String(reqId));
-            console.log(`[File Upload] Using configured path: ${baseDir}`);
-        } else {
-            // Fallback to default paths if not configured
-            const departmentName = depts[0].name || `department_${deptId}`;
-            const safeDepartmentName = departmentName
-                .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
-                .trim()
-                .replace(/\s+/g, '_');
-            baseDir = path.join('C:\\', safeDepartmentName, String(reqId));
-            console.log(`[File Upload] Using default path: ${baseDir}`);
-        }
+        // Create folder name with department and sequence number (SR.NO)
+        const folderName = `${safeDepartmentName}_REQ${sequenceNo || reqId}`;
+        
+        // Use centralized audit requirement folder
+        const basePath = 'C:\\Centralized Audit Requirement';
+        const baseDir = path.join(basePath, folderName);
+        
+        console.log(`[File Upload] Using centralized path: ${baseDir}`);
         
         await fs.mkdir(baseDir, { recursive: true });
         console.log(`[File Upload] Created directory: ${baseDir}`);

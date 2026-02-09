@@ -1896,7 +1896,90 @@
                 return;
             }
             
+            // Calculate SR.NO (sequence number in the list)
+            const seqNo = dept.requirements.indexOf(requirement) + 1;
+            
             appState.currentRequirementId = id;
+            appState.currentRequirementSeqNo = seqNo;  // Store sequence number
+            
+            // Clear uploaded files for this requirement (fresh state)
+            appState.uploadedFiles[id] = [];
+            
+            // Clear file input and file list display completely
+            fileUpload.value = '';
+            
+            // Check if requirement has actual files from database
+            const requirementFiles = requirement.files || [];
+            
+            // For pending status: show no files, for completed/in-progress: show files
+            if (requirement.status === 'pending' || requirementFiles.length === 0) {
+                // No files for pending requirements or if no files exist
+                fileList.innerHTML = '<div class="text-gray-500 italic text-sm text-center p-4">No files uploaded yet</div>';
+            } else {
+                // Show existing files for completed/in-progress requirements
+                fileList.innerHTML = '';
+                
+                // Add file count header
+                const fileCountHeader = document.createElement('div');
+                fileCountHeader.className = 'mb-3 flex items-center justify-between';
+                fileCountHeader.innerHTML = `
+                    <p class="text-sm font-semibold text-gray-700">Attachments</p>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">${requirementFiles.length} file${requirementFiles.length > 1 ? 's' : ''}</span>
+                `;
+                fileList.appendChild(fileCountHeader);
+                
+                requirementFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item bg-gray-50 p-3 rounded-lg flex items-center justify-between';
+                    fileItem.dataset.fileId = file.id;
+                    
+                    const fileIcon = getFileIcon(file.type || file.name);
+                    const fileSize = formatFileSize(file.size || 0);
+                    const uploadTime = file.uploaded ? formatTime(file.uploaded) : 'Recently';
+                    
+                    fileItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="${fileIcon.color} text-lg mr-3">
+                                <i class="${fileIcon.icon}"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 truncate max-w-[200px]">${file.name}</p>
+                                <p class="text-xs text-gray-500">${fileSize} • Uploaded ${uploadTime}</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-800 view-file-btn" data-file="${file.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-800 delete-file-btn" data-file="${file.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    fileList.appendChild(fileItem);
+                });
+                
+                // Add event listeners for file buttons
+                document.querySelectorAll('.view-file-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const fileId = this.dataset.file;
+                        viewFile(fileId, id, dept);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-file-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const fileId = this.dataset.file;
+                        if (confirm('Are you sure you want to delete this file?')) {
+                            deleteFile(fileId, id, dept);
+                        }
+                    });
+                });
+            }
+            
             document.getElementById('modal-title').textContent = 'Update Requirement Status';
             document.getElementById('requirement-title').textContent = requirement.description;
             document.getElementById('requirement-detail').textContent = `${dept.name} - Requirement #${id}`;
@@ -1938,30 +2021,12 @@
             const requirement = dept.requirements.find(r => r.id === reqId);
             const existingFiles = requirement.files || [];
             
-            // Also check file system
-            let fileSystemFiles = [];
-            if (folderInfo && appState.fileSystem.Shared?.Audit_Files?.[folderInfo.deptFolder]?.[folderInfo.reqFolder]) {
-                const folder = appState.fileSystem.Shared.Audit_Files[folderInfo.deptFolder][folderInfo.reqFolder];
-                fileSystemFiles = Object.keys(folder)
-                    .filter(key => key !== '_metadata')
-                    .map(key => ({
-                        id: key,
-                        name: folder[key].name,
-                        size: folder[key].size,
-                        type: folder[key].type,
-                        uploaded: folder[key].uploaded
-                    }));
-            }
-            
-            // Combine files
-            const allFiles = [...existingFiles, ...fileSystemFiles];
-            
-            if (allFiles.length === 0) {
+            if (existingFiles.length === 0) {
                 fileList.innerHTML = '<div class="text-gray-500 italic text-sm text-center p-4">No files uploaded yet</div>';
                 return;
             }
             
-            allFiles.forEach(file => {
+            existingFiles.forEach(file => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item bg-gray-50 p-3 rounded-lg flex items-center justify-between';
                 fileItem.dataset.fileId = file.id;
@@ -2147,26 +2212,81 @@
         }
 
         // Delete file
-        function deleteFile(fileId, reqId, dept) {
-            // Remove from requirement files
-            const requirement = dept.requirements.find(r => r.id === reqId);
-            if (requirement && requirement.files) {
-                requirement.files = requirement.files.filter(f => f.id !== fileId);
-            }
-            
-            // Remove from file system
-            const deptFolderName = dept.name.replace(/[^a-zA-Z0-9]/g, '_');
-            const reqFolderName = `Requirement_${reqId}`;
-            
-            if (appState.fileSystem.Shared?.Audit_Files?.[deptFolderName]?.[reqFolderName]?.[fileId]) {
-                delete appState.fileSystem.Shared.Audit_Files[deptFolderName][reqFolderName][fileId];
+        async function deleteFile(fileId, reqId, dept) {
+            try {
+                // Call server to delete file
+                await apiClient.request('DELETE', `/departments/${dept.id}/requirements/${reqId}/files/${fileId}`);
                 
-                // Add activity log
-                addActivity(`Deleted file from requirement #${reqId}`, dept.id);
-                
-                // Reload files
-                const folderInfo = { deptFolder: deptFolderName, reqFolder: reqFolderName };
-                loadExistingFiles(reqId, dept, folderInfo);
+                // Remove from requirement files
+                const requirement = dept.requirements.find(r => r.id === reqId);
+                if (requirement && requirement.files) {
+                    requirement.files = requirement.files.filter(f => f.id !== fileId);
+                    
+                    // Reload files display
+                    if (appState.currentRequirementId === reqId) {
+                        const requirementFiles = requirement.files || [];
+                        
+                        if (requirementFiles.length === 0) {
+                            fileList.innerHTML = '<div class="text-gray-500 italic text-sm text-center p-4">No files uploaded yet</div>';
+                        } else {
+                            fileList.innerHTML = '';
+                            requirementFiles.forEach(file => {
+                                const fileItem = document.createElement('div');
+                                fileItem.className = 'file-item bg-gray-50 p-3 rounded-lg flex items-center justify-between';
+                                fileItem.dataset.fileId = file.id;
+                                
+                                const fileIcon = getFileIcon(file.type || file.name);
+                                const fileSize = formatFileSize(file.size || 0);
+                                const uploadTime = file.uploaded ? formatTime(file.uploaded) : 'Recently';
+                                
+                                fileItem.innerHTML = `
+                                    <div class="flex items-center">
+                                        <div class="${fileIcon.color} text-lg mr-3">
+                                            <i class="${fileIcon.icon}"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800 truncate max-w-[200px]">${file.name}</p>
+                                            <p class="text-xs text-gray-500">${fileSize} • Uploaded ${uploadTime}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800 view-file-btn" data-file="${file.id}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800 delete-file-btn" data-file="${file.id}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                
+                                fileList.appendChild(fileItem);
+                            });
+                            
+                            // Re-attach event listeners for file buttons
+                            document.querySelectorAll('.view-file-btn').forEach(btn => {
+                                btn.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    const fileId = this.dataset.file;
+                                    viewFile(fileId, reqId, dept);
+                                });
+                            });
+                            
+                            document.querySelectorAll('.delete-file-btn').forEach(btn => {
+                                btn.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    const fileId = this.dataset.file;
+                                    if (confirm('Are you sure you want to delete this file?')) {
+                                        deleteFile(fileId, reqId, dept);
+                                    }
+                                });
+                            });
+                        }
+                    }
+                    
+                    showToast('File deleted successfully!');
+                }
+            } catch (error) {
+                showToast(`Error deleting file: ${error.message}`, 'error');
             }
         }
 
@@ -2255,8 +2375,10 @@
                 // Upload files first if any
                 const uploadedFiles = appState.uploadedFiles[id] || [];
                 if (uploadedFiles.length > 0) {
-                    // Files already have base64 data, send them directly
+                    // Files already have base64 data, send them directly with sequence number
+                    const seqNo = appState.currentRequirementSeqNo || 1;
                     await apiClient.request('POST', `/departments/${dept.id}/requirements/${id}/files`, { 
+                        sequenceNo: seqNo,
                         files: uploadedFiles.map(f => ({
                             name: f.name,
                             type: f.type,
