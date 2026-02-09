@@ -98,16 +98,21 @@
                     </div>
                     
                     <div class="mt-6">
-                        <p class="text-gray-600 text-sm mb-2 text-center font-medium">Default Test Credentials:</p>
-                        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-xs">
-                            <div class="font-medium text-blue-900 mb-2">Admin Account:</div>
-                            <div class="text-blue-800 font-mono">
-                                <div>Username: <strong>admin@kpmg.com</strong></div>
-                                <div>Password: <strong>Admin123</strong></div>
-                            </div>
-                        </div>
-                        <p class="text-gray-500 text-xs mt-3 text-center">Other department accounts can be created from the admin dashboard</p>
-                    </div>
+                        <p class="text-gray-600 text-sm mb-2 text-center font-medium">Demo Access Credentials:</p>
+                        <div class="bg-gray-50 p-3 rounded-lg text-xs">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="font-medium">Admin:</div>
+                                <div>admin / admin123</div>
+                                <div class="font-medium">Corporate IT:</div>
+                                <div>corpit / corpit123</div>
+                                <div class="font-medium">Data Analytics:</div>
+                                <div>dataanalytics / data123</div>
+                                <div class="font-medium">Infrastructure:</div>
+                                <div>infrastructure / infra123</div>
+                                <div class="font-medium">Platforms:</div>
+                                <div>platforms / platform123</div>
+                                <div class="font-medium">Quality Assurance:</div>
+                                <div>qualityassurance / quality123</div>
                                 <div class="font-medium">Solution Dev:</div>
                                 <div>solutiondev / solution123</div>
                                 <div class="font-medium">Tech Strategy:</div>
@@ -1018,7 +1023,6 @@
     <script src="departments-quality-assurance.js"></script>
     <script src="departments-solution-dev.js"></script>
     <script src="departments-tech-strategy.js"></script>
-    <script src="js/api-client.js"></script>
 
     <script>
         // Application State
@@ -1038,26 +1042,174 @@
         };
 
         // Initialize default data
-        async function initializeData() {
-            try {
-                console.log('[Init] Starting data initialization...');
-                // Load data from server API
-                appState.departments = await apiClient.getDepartments();
-                console.log('[Init] Departments loaded:', appState.departments);
-                
-                appState.users = [];  // Users will be loaded per-user after login
-                appState.activities = [];
-                appState.uploadedFiles = {};
-                appState.folderConfig = await apiClient.getFolderConfig();
-                console.log('[Init] Folder config loaded:', appState.folderConfig);
-                
-                appState.fileSystem = {};
-                console.log('[Init] Data initialization complete');
-            } catch (error) {
-                console.error('[Init] Error initializing data:', error);
-                // If server is not available, show error but don't block login
-                showToast('Note: Server API may not be fully available. You can still try to login.', 'warning');
+        function initializeData() {
+            // Load departments from external JavaScript files
+            const departmentsData = [
+                corporateIT,
+                dataAnalytics,
+                infrastructure,
+                platforms,
+                qualityAssurance,
+                solutionDev,
+                techStrategy
+            ];
+
+            // Initialize users if not exists
+            if (!localStorage.getItem('auditPortalUsers')) {
+                const defaultUsers = [
+                    {
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        fullName: 'System Administrator',
+                        email: 'admin@tasheer.com',
+                        role: 'admin',
+                        department: null,
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 2,
+                        username: 'corpit',
+                        password: 'corpit123',
+                        fullName: 'Corporate IT Director',
+                        email: 'it.director@tasheer.com',
+                        role: 'director',
+                        department: 'corporate-it',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 3,
+                        username: 'dataanalytics',
+                        password: 'data123',
+                        fullName: 'Data Analytics Director',
+                        email: 'data.director@tasheer.com',
+                        role: 'director',
+                        department: 'data-analytics',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 4,
+                        username: 'infrastructure',
+                        password: 'infra123',
+                        fullName: 'Infrastructure Director',
+                        email: 'infra.director@tasheer.com',
+                        role: 'director',
+                        department: 'infrastructure',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 5,
+                        username: 'platforms',
+                        password: 'platform123',
+                        fullName: 'Platforms Director',
+                        email: 'platforms.director@tasheer.com',
+                        role: 'director',
+                        department: 'platforms',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 6,
+                        username: 'qualityassurance',
+                        password: 'quality123',
+                        fullName: 'Quality Assurance Director',
+                        email: 'qa.director@tasheer.com',
+                        role: 'director',
+                        department: 'quality-assurance',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 7,
+                        username: 'solutiondev',
+                        password: 'solution123',
+                        fullName: 'Solution Development Director',
+                        email: 'solution.director@tasheer.com',
+                        role: 'director',
+                        department: 'solution-dev',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 8,
+                        username: 'techstrategy',
+                        password: 'strategy123',
+                        fullName: 'Tech Strategy Director',
+                        email: 'strategy.director@tasheer.com',
+                        role: 'director',
+                        department: 'tech-strategy',
+                        status: 'active',
+                        lastLogin: null,
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem('auditPortalUsers', JSON.stringify(defaultUsers));
             }
+
+            // Load saved departments data or initialize
+            if (!localStorage.getItem('auditPortalDepartments')) {
+                localStorage.setItem('auditPortalDepartments', JSON.stringify(departmentsData));
+            }
+
+            // Initialize file system if not exists
+            if (!localStorage.getItem('auditPortalFileSystem')) {
+                const defaultFileSystem = {
+                    'Shared': {
+                        'Audit_Files': {
+                            'Corporate_IT': {},
+                            'Data_Analytics_BI': {},
+                            'Infrastructure_Operations': {},
+                            'Platforms_Solutions': {},
+                            'Quality_Assurance': {},
+                            'Solution_Development': {},
+                            'Tech_Strategy_EA': {}
+                        }
+                    }
+                };
+                localStorage.setItem('auditPortalFileSystem', JSON.stringify(defaultFileSystem));
+            }
+
+            // Load activities if exists
+            if (!localStorage.getItem('auditPortalActivities')) {
+                localStorage.setItem('auditPortalActivities', JSON.stringify([]));
+            }
+            
+            // Load uploaded files if exists
+            if (!localStorage.getItem('auditPortalUploadedFiles')) {
+                localStorage.setItem('auditPortalUploadedFiles', JSON.stringify({}));
+            }
+
+            // Load data into app state
+            appState.users = JSON.parse(localStorage.getItem('auditPortalUsers'));
+            appState.departments = JSON.parse(localStorage.getItem('auditPortalDepartments'));
+            appState.fileSystem = JSON.parse(localStorage.getItem('auditPortalFileSystem'));
+            appState.activities = JSON.parse(localStorage.getItem('auditPortalActivities'));
+            appState.uploadedFiles = JSON.parse(localStorage.getItem('auditPortalUploadedFiles'));
+            
+            // Initialize shared folder configuration
+            if (!localStorage.getItem('auditPortalFolderConfig')) {
+                const folderConfig = {};
+                appState.departments.forEach(dept => {
+                    folderConfig[dept.id] = {
+                        path: '',
+                        configured: false
+                    };
+                });
+                localStorage.setItem('auditPortalFolderConfig', JSON.stringify(folderConfig));
+            }
+            
+            appState.folderConfig = JSON.parse(localStorage.getItem('auditPortalFolderConfig'));
         }
 
         // DOM Elements
@@ -1145,22 +1297,17 @@
         const folderConfigList = document.getElementById('folder-config-list');
 
         // Initialize application
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('[App] DOMContentLoaded fired');
-            await initializeData();
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
             setupEventListeners();
-            console.log('[App] Initialization complete');
             
-            // Check if user is already logged in (token exists)
-            if (apiClient.getToken()) {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
                 try {
-                    const savedUser = localStorage.getItem('currentUser');
-                    if (savedUser) {
-                        appState.currentUser = JSON.parse(savedUser);
-                        showApp();
-                    }
+                    appState.currentUser = JSON.parse(savedUser);
+                    showApp();
                 } catch (e) {
-                    apiClient.logout();
                     localStorage.removeItem('currentUser');
                 }
             }
@@ -1168,19 +1315,9 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            console.log('[Setup] Setting up event listeners...');
-            
             // Login form
-            if (loginForm) {
-                console.log('[Setup] Attaching login form handler');
-                loginForm.addEventListener('submit', handleLogin);
-            } else {
-                console.error('[Setup] Login form not found!');
-            }
-            
-            if (togglePasswordBtn) {
-                togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
-            }
+            loginForm.addEventListener('submit', handleLogin);
+            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
             
             // User menu
             userMenuBtn.addEventListener('click', toggleUserMenu);
@@ -1258,28 +1395,24 @@
         }
 
         // Handle login
-        async function handleLogin(e) {
+        function handleLogin(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
             
-            console.log('[Login] Form submitted');
-            console.log('[Login] Username:', username, 'Password:', password ? '[filled]' : '[empty]');
+            // Find user
+            const user = appState.users.find(u => 
+                u.username === username && u.password === password && u.status === 'active'
+            );
             
-            if (!username || !password) {
-                console.error('[Login] Form validation failed - missing fields');
-                loginError.classList.remove('hidden');
-                errorMessage.textContent = 'Please fill in all fields';
-                return;
-            }
-            
-            try {
-                console.log('[Login] Attempting login with username:', username);
+            if (user) {
+                // Update last login
+                user.lastLogin = new Date().toISOString();
+                localStorage.setItem('auditPortalUsers', JSON.stringify(appState.users));
                 
-                // Authenticate with server API
-                const user = await apiClient.login(username, password);
-                console.log('[Login] Login successful:', user);
+                // Add activity log
+                addActivity(`${user.fullName} logged in`, 'system');
                 
                 // Set current user
                 appState.currentUser = user;
@@ -1296,10 +1429,9 @@
                 
                 // Show app
                 showApp();
-            } catch (error) {
-                console.error('[Login] Login failed:', error);
+            } else {
                 loginError.classList.remove('hidden');
-                errorMessage.textContent = error.message || 'Invalid username or password';
+                errorMessage.textContent = 'Invalid username or password';
             }
         }
 
@@ -1316,6 +1448,9 @@
                 if (!appState.fileSystem.Shared) appState.fileSystem.Shared = {};
                 if (!appState.fileSystem.Shared.Audit_Files) appState.fileSystem.Shared.Audit_Files = {};
                 appState.fileSystem.Shared.Audit_Files[deptFolderName] = {};
+                
+                // Save to localStorage
+                localStorage.setItem('auditPortalFileSystem', JSON.stringify(appState.fileSystem));
                 
                 // Add activity log
                 addActivity(`Created department folder: ${dept.name}`, 'system');
@@ -1347,6 +1482,9 @@
                     }
                 };
                 
+                // Save to localStorage
+                localStorage.setItem('auditPortalFileSystem', JSON.stringify(appState.fileSystem));
+                
                 // Add activity log
                 addActivity(`Created folder for requirement #${requirementId} in ${dept.name}`, departmentId);
             }
@@ -1367,53 +1505,31 @@
 
         // Show main application
         function showApp() {
-            try {
-                console.log('[App] Showing app interface for user:', appState.currentUser?.username);
-                loginPage.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                
-                // Update UI based on user role
-                updateUserUI();
-                
-                if (appState.currentUser.role === 'admin') {
-                    console.log('[App] Loading admin dashboard');
-                    showAdminDashboard();
-                } else {
-                    console.log('[App] Loading director dashboard');
-                    showDirectorDashboard();
-                }
-                console.log('[App] Dashboard displayed successfully');
-            } catch (error) {
-                console.error('[App] Error showing app:', error);
-                throw error;
+            loginPage.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            
+            // Update UI based on user role
+            updateUserUI();
+            
+            if (appState.currentUser.role === 'admin') {
+                showAdminDashboard();
+            } else {
+                showDirectorDashboard();
             }
         }
 
         // Update user UI elements
         function updateUserUI() {
-            try {
-                const user = appState.currentUser;
-                const roleText = user.role === 'admin' ? 'Administrator' : 
-                                user.role === 'director' ? 'Department Director' : 'Viewer';
-                
-                // Update header elements safely
-                const userGreeting = document.getElementById('user-greeting');
-                const userRole = document.getElementById('user-role');
-                const usernameDisplay = document.getElementById('username-display');
-                const menuUsername = document.getElementById('menu-username');
-                const menuRole = document.getElementById('menu-role');
-                
-                if (userGreeting) userGreeting.textContent = `Welcome, ${user.fullName.split(' ')[0]}`;
-                if (userRole) userRole.textContent = roleText;
-                if (usernameDisplay) usernameDisplay.textContent = user.fullName.split(' ')[0];
-                if (menuUsername) menuUsername.textContent = user.fullName;
-                if (menuRole) menuRole.textContent = roleText;
-                
-                console.log('[UI] User UI updated');
-            } catch (error) {
-                console.error('[UI] Error updating user UI:', error);
-                throw error;
-            }
+            const user = appState.currentUser;
+            const roleText = user.role === 'admin' ? 'Administrator' : 
+                            user.role === 'director' ? 'Department Director' : 'Viewer';
+            
+            // Update header
+            document.getElementById('user-greeting').textContent = `Welcome, ${user.fullName.split(' ')[0]}`;
+            document.getElementById('user-role').textContent = roleText;
+            document.getElementById('username-display').textContent = user.fullName.split(' ')[0];
+            document.getElementById('menu-username').textContent = user.fullName;
+            document.getElementById('menu-role').textContent = roleText;
         }
 
         // Show admin dashboard
@@ -2128,6 +2244,10 @@
             if (appState.fileSystem.Shared?.Audit_Files?.[deptFolderName]?.[reqFolderName]?.[fileId]) {
                 delete appState.fileSystem.Shared.Audit_Files[deptFolderName][reqFolderName][fileId];
                 
+                // Save changes
+                localStorage.setItem('auditPortalFileSystem', JSON.stringify(appState.fileSystem));
+                localStorage.setItem('auditPortalDepartments', JSON.stringify(appState.departments));
+                
                 // Add activity log
                 addActivity(`Deleted file from requirement #${reqId}`, dept.id);
                 
@@ -2138,134 +2258,178 @@
         }
 
         // Save requirement status
-        async function saveRequirementStatus(id, dept) {
+        function saveRequirementStatus(id, dept) {
             const requirement = dept.requirements.find(req => req.id === id);
             
             if (!requirement) return;
             
-            try {
-                // Get selected status
-                let selectedStatus = 'pending';
-                document.querySelectorAll('.status-btn').forEach(btn => {
-                    if (btn.classList.contains('border-2')) {
-                        selectedStatus = btn.dataset.status;
-                    }
-                });
-                
-                const remarks = document.getElementById('remarks').value;
-                const receivingDate = document.getElementById('receiving-date').value || requirement.receivingDate;
-                
-                // Save to server API
-                await apiClient.updateRequirement(dept.id, id, {
-                    status: selectedStatus,
-                    remarks,
-                    receivingDate
-                });
-                
-                // Update local requirement
-                requirement.status = selectedStatus;
-                requirement.remarks = remarks;
-                requirement.receivingDate = receivingDate;
-                
-                // Update UI
-                updateDirectorStats(dept);
-                renderDirectorRequirements();
-                
-                // Show confirmation
-                showToast('Status updated successfully!');
-                
-                // Close modal
-                closeUpdateModal();
-            } catch (error) {
-                showToast(`Error updating status: ${error.message}`, 'error');
+            // Get selected status
+            let selectedStatus = 'pending';
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                if (btn.classList.contains('border-2')) {
+                    selectedStatus = btn.dataset.status;
+                }
+            });
+            
+            const oldStatus = requirement.status;
+            
+            // Update requirement
+            requirement.status = selectedStatus;
+            requirement.remarks = document.getElementById('remarks').value;
+            requirement.receivingDate = document.getElementById('receiving-date').value || requirement.receivingDate;
+            
+            // Save to localStorage
+            localStorage.setItem('auditPortalDepartments', JSON.stringify(appState.departments));
+            
+            // Add activity log
+            if (oldStatus !== selectedStatus) {
+                addActivity(`Updated requirement #${id} from ${oldStatus} to ${selectedStatus}`, dept.id);
             }
+            
+            // Update UI
+            updateDirectorStats(dept);
+            renderDirectorRequirements();
+            
+            // Show confirmation
+            showToast('Status updated successfully!');
+            
+            // Close modal
+            closeUpdateModal();
         }
 
         // Submit requirement status
-        async function submitRequirementStatus(id, dept) {
+        function submitRequirementStatus(id, dept) {
             const requirement = dept.requirements.find(req => req.id === id);
             
             if (!requirement) return;
             
-            try {
-                // Get selected status
-                let selectedStatus = 'pending';
+            // Get selected status
+            let selectedStatus = 'pending';
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                if (btn.classList.contains('border-2')) {
+                    selectedStatus = btn.dataset.status;
+                }
+            });
+            
+            // For submission, set to completed if not already
+            if (selectedStatus !== 'completed') {
+                selectedStatus = 'completed';
+                
+                // Update status button UI
                 document.querySelectorAll('.status-btn').forEach(btn => {
-                    if (btn.classList.contains('border-2')) {
-                        selectedStatus = btn.dataset.status;
+                    btn.classList.remove('border-2', 'border-blue-500');
+                    if (btn.dataset.status === 'completed') {
+                        btn.classList.add('border-2', 'border-blue-500');
                     }
                 });
-                
-                // For submission, set to completed if not already
-                if (selectedStatus !== 'completed') {
-                    selectedStatus = 'completed';
-                    
-                    // Update status button UI
-                    document.querySelectorAll('.status-btn').forEach(btn => {
-                        btn.classList.remove('border-2', 'border-blue-500');
-                        if (btn.dataset.status === 'completed') {
-                            btn.classList.add('border-2', 'border-blue-500');
-                        }
-                    });
-                }
-                
-                const remarks = document.getElementById('remarks').value;
-                
-                // Set receiving date to today if completed
-                let receivingDate = requirement.receivingDate;
-                if (selectedStatus === 'completed') {
-                    const today = new Date();
-                    receivingDate = today.toISOString().split('T')[0];
-                    document.getElementById('receiving-date').value = receivingDate;
-                }
-                
-                // Upload files first if any
-                const uploadedFiles = appState.uploadedFiles[id] || [];
-                if (uploadedFiles.length > 0) {
-                    // Prepare files for upload
-                    const filesToUpload = uploadedFiles.map(f => ({
-                        name: f.name,
-                        type: f.type,
-                        size: f.size,
-                        data: f.file // Store file object, will be handled by API
-                    }));
-                    
-                    await apiClient.uploadFiles(dept.id, id, filesToUpload);
-                }
-                
-                // Save requirement status
-                await apiClient.updateRequirement(dept.id, id, {
-                    status: selectedStatus,
-                    remarks,
-                    receivingDate
-                });
-                
-                // Update local requirement
-                requirement.status = selectedStatus;
-                requirement.remarks = remarks;
-                requirement.receivingDate = receivingDate;
-                
-                // Clear temporary files
-                appState.uploadedFiles[id] = [];
-                
-                // Update UI
-                updateDirectorStats(dept);
-                renderDirectorRequirements();
-                
-                // Show confirmation
-                showToast(`Requirement submitted with ${uploadedFiles.length} files!`);
-                
-                // Close modal
-                closeUpdateModal();
-            } catch (error) {
-                showToast(`Error submitting requirement: ${error.message}`, 'error');
             }
+            
+            const oldStatus = requirement.status;
+            
+            // Update requirement
+            requirement.status = selectedStatus;
+            requirement.remarks = document.getElementById('remarks').value;
+            
+            // Set receiving date to today if completed
+            if (selectedStatus === 'completed') {
+                const today = new Date();
+                requirement.receivingDate = today.toISOString().split('T')[0];
+                document.getElementById('receiving-date').value = requirement.receivingDate;
+            }
+            
+            // Save uploaded files to file system
+            const uploadedFiles = appState.uploadedFiles[id] || [];
+            if (uploadedFiles.length > 0) {
+                saveFilesToFileSystem(id, dept, uploadedFiles);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('auditPortalDepartments', JSON.stringify(appState.departments));
+            
+            // Add activity log
+            if (oldStatus !== selectedStatus) {
+                addActivity(`Submitted requirement #${id} with ${uploadedFiles.length} files`, dept.id);
+            }
+            
+            // Clear temporary files
+            appState.uploadedFiles[id] = [];
+            
+            // Update UI
+            updateDirectorStats(dept);
+            renderDirectorRequirements();
+            
+            // Show confirmation
+            showToast(`Requirement submitted with ${uploadedFiles.length} files!`);
+            
+            // Close modal
+            closeUpdateModal();
         }
 
-        // Save files to file system (DEPRECATED - use apiClient.uploadFiles instead)
+        // Save files to file system
         function saveFilesToFileSystem(reqId, dept, uploadedFiles) {
-            // This function is deprecated. File uploads are now handled server-side via the API.
-            // See apiClient.uploadFiles() for the new implementation.
+            // Ensure folder exists
+            const folderInfo = ensureRequirementFolderExists(dept.id, reqId);
+            if (!folderInfo) return;
+            
+            // Get the requirement
+            const requirement = dept.requirements.find(r => r.id === reqId);
+            if (!requirement.files) requirement.files = [];
+            
+            uploadedFiles.forEach(fileObj => {
+                const file = fileObj.file;
+                
+                // Read file as base64 for simulation
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Create file record
+                    const fileRecord = {
+                        id: fileObj.id,
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        uploaded: new Date().toISOString(),
+                        data: e.target.result // Base64 data for simulation
+                    };
+                    
+                    // Save to file system
+                    if (!appState.fileSystem.Shared.Audit_Files[folderInfo.deptFolder][folderInfo.reqFolder]) {
+                        appState.fileSystem.Shared.Audit_Files[folderInfo.deptFolder][folderInfo.reqFolder] = {
+                            '_metadata': {
+                                created: new Date().toISOString(),
+                                requirementId: reqId,
+                                requirementDescription: requirement.description,
+                                lastUpdated: new Date().toISOString()
+                            }
+                        };
+                    }
+                    
+                    // Add file to folder
+                    appState.fileSystem.Shared.Audit_Files[folderInfo.deptFolder][folderInfo.reqFolder][fileObj.id] = fileRecord;
+                    
+                    // Update metadata
+                    appState.fileSystem.Shared.Audit_Files[folderInfo.deptFolder][folderInfo.reqFolder]['_metadata'].lastUpdated = new Date().toISOString();
+                    
+                    // Save file system
+                    localStorage.setItem('auditPortalFileSystem', JSON.stringify(appState.fileSystem));
+                    
+                    // Add to requirement's file list
+                    requirement.files.push({
+                        id: fileObj.id,
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        uploaded: fileRecord.uploaded
+                    });
+                    
+                    // Save departments
+                    localStorage.setItem('auditPortalDepartments', JSON.stringify(appState.departments));
+                    
+                    // Add activity log
+                    addActivity(`Uploaded file "${file.name}" for requirement #${reqId}`, dept.id);
+                };
+                
+                reader.readAsDataURL(file); // Convert to base64
+            });
         }
 
         // Submit all requirements
@@ -2286,6 +2450,9 @@
                         req.receivingDate = today;
                     }
                 });
+                
+                // Save to localStorage
+                localStorage.setItem('auditPortalDepartments', JSON.stringify(appState.departments));
                 
                 // Add activity log
                 addActivity(`Submitted all ${pendingReqs.length} pending requirements`, dept.id);
@@ -2363,7 +2530,7 @@
         }
 
         // Save user
-        async function saveUser() {
+        function saveUser() {
             const username = document.getElementById('user-username').value.trim();
             const password = document.getElementById('user-password').value;
             const fullName = document.getElementById('user-fullname').value.trim();
@@ -2389,56 +2556,75 @@
                 return;
             }
             
-            try {
-                const userData = {
+            if (editingId) {
+                // Update existing user
+                const userIndex = appState.users.findIndex(u => u.id === parseInt(editingId));
+                if (userIndex !== -1) {
+                    appState.users[userIndex].username = username;
+                    if (password) {
+                        appState.users[userIndex].password = password;
+                    }
+                    appState.users[userIndex].fullName = fullName;
+                    appState.users[userIndex].email = email;
+                    appState.users[userIndex].role = role;
+                    appState.users[userIndex].department = role === 'director' ? department : null;
+                    appState.users[userIndex].status = status;
+                    
+                    // Add activity log
+                    addActivity(`Updated user ${username}`, 'system');
+                }
+            } else {
+                // Add new user
+                const newId = Math.max(...appState.users.map(u => u.id)) + 1;
+                const newUser = {
+                    id: newId,
                     username,
+                    password,
                     fullName,
                     email,
                     role,
-                    department: role === 'director' ? parseInt(department) : null,
-                    status
+                    department: role === 'director' ? department : null,
+                    status,
+                    lastLogin: null,
+                    createdAt: new Date().toISOString()
                 };
+                appState.users.push(newUser);
                 
-                if (password) {
-                    userData.password = password;
-                }
-                
-                if (editingId) {
-                    // Update existing user
-                    await apiClient.updateUser(parseInt(editingId), userData);
-                    showToast('User updated successfully!');
-                } else {
-                    // Add new user
-                    await apiClient.createUser({ ...userData, password });
-                    showToast('User added successfully!');
-                }
-                
-                // Reload admin dashboard
-                loadAdminStats();
-                loadUsersTable();
-                
-                // Close modal
-                closeUserModal();
-            } catch (error) {
-                showToast(`Error saving user: ${error.message}`, 'error');
+                // Add activity log
+                addActivity(`Added new user ${username} (${fullName})`, 'system');
             }
+            
+            // Save to localStorage
+            localStorage.setItem('auditPortalUsers', JSON.stringify(appState.users));
+            
+            // Reload admin dashboard
+            loadAdminStats();
+            loadUsersTable();
+            
+            // Show confirmation
+            showToast(`User ${editingId ? 'updated' : 'added'} successfully!`);
+            
+            // Close modal
+            closeUserModal();
         }
 
         // Delete user
-        async function deleteUser(userId) {
+        function deleteUser(userId) {
             if (userId === 1) return;
             
-            try {
-                await apiClient.deleteUser(userId);
-                
-                // Reload admin dashboard
-                loadAdminStats();
-                loadUsersTable();
-                
-                showToast('User deleted successfully!');
-            } catch (error) {
-                showToast(`Error deleting user: ${error.message}`, 'error');
-            }
+            const user = appState.users.find(u => u.id === userId);
+            if (!user) return;
+            
+            appState.users = appState.users.filter(u => u.id !== userId);
+            
+            // Save to localStorage
+            localStorage.setItem('auditPortalUsers', JSON.stringify(appState.users));
+            
+            // Add activity log
+            addActivity(`Deleted user ${user.username}`, 'system');
+            
+            // Reload admin dashboard
+            loadAdminStats();
             loadUsersTable();
             
             showToast('User deleted successfully!');
@@ -2450,11 +2636,17 @@
         }
 
         // Change password
-        async function changePassword() {
+        function changePassword() {
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const errorDiv = document.getElementById('password-error');
+            
+            if (currentPassword !== appState.currentUser.password) {
+                errorDiv.querySelector('#password-error-message').textContent = 'Current password is incorrect';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
             
             if (newPassword.length < 6) {
                 errorDiv.querySelector('#password-error-message').textContent = 'New password must be at least 6 characters';
@@ -2468,29 +2660,41 @@
                 return;
             }
             
-            try {
-                // Update password via API
-                await apiClient.updateUser(appState.currentUser.id, { password: newPassword });
-                
-                // Update current user in state
+            // Update password
+            const userIndex = appState.users.findIndex(u => u.id === appState.currentUser.id);
+            if (userIndex !== -1) {
+                appState.users[userIndex].password = newPassword;
                 appState.currentUser.password = newPassword;
+                
+                localStorage.setItem('auditPortalUsers', JSON.stringify(appState.users));
+                localStorage.setItem('currentUser', JSON.stringify(appState.currentUser));
+                
+                addActivity('Changed password', appState.currentUser.department || 'system');
                 
                 showToast('Password changed successfully!');
                 
                 closePasswordModal();
                 document.getElementById('change-password-form').reset();
                 errorDiv.classList.add('hidden');
-            } catch (error) {
-                errorDiv.querySelector('#password-error-message').textContent = error.message || 'Error changing password';
-                errorDiv.classList.remove('hidden');
             }
         }
 
         // Add activity log
         function addActivity(message, departmentId) {
-            // Activity logging is now handled server-side
-            // This function is kept for backward compatibility with existing code
-            // The server automatically logs all activities through the API
+            const activity = {
+                id: Date.now(),
+                message,
+                departmentId,
+                type: departmentId === 'system' ? 'system' : 'department',
+                timestamp: new Date().toISOString()
+            };
+            
+            appState.activities.unshift(activity);
+            localStorage.setItem('auditPortalActivities', JSON.stringify(appState.activities));
+            
+            if (appState.currentUser && appState.currentUser.role === 'director') {
+                loadActivityFeed(appState.currentUser.department);
+            }
         }
 
         // Toggle user menu
@@ -2501,9 +2705,10 @@
         // Handle logout
         function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
+                addActivity(`${appState.currentUser.fullName} logged out`, 'system');
+                
                 appState.currentUser = null;
                 localStorage.removeItem('currentUser');
-                apiClient.logout();
                 
                 appContainer.classList.add('hidden');
                 loginPage.classList.remove('hidden');
@@ -2687,40 +2892,55 @@
         }
         
         // Save folder configuration
-        async function saveFolderConfiguration() {
+        function saveFolderConfiguration() {
             const pathInputs = document.querySelectorAll('.folder-path-input');
             const urlInputs = document.querySelectorAll('.folder-url-input');
+            let configured = false;
             
-            try {
-                // Save paths and URLs via API
-                const updates = [];
+            // Save paths and URLs
+            pathInputs.forEach(input => {
+                const deptId = input.dataset.dept;
+                const path = input.value.trim();
                 
-                pathInputs.forEach(input => {
-                    const deptId = parseInt(input.dataset.dept);
-                    const path = input.value.trim();
-                    const urlInput = document.querySelector(`.folder-url-input[data-dept="${deptId}"]`);
-                    const sharedUrl = urlInput ? urlInput.value.trim() : '';
-                    
-                    updates.push(
-                        apiClient.updateFolderConfig(deptId, { path, sharedUrl })
-                    );
-                });
+                if (!appState.folderConfig[deptId]) {
+                    appState.folderConfig[deptId] = {};
+                }
                 
-                // Wait for all updates to complete
-                await Promise.all(updates);
+                appState.folderConfig[deptId].path = path;
+                if (path !== '') configured = true;
+            });
+            
+            urlInputs.forEach(input => {
+                const deptId = input.dataset.dept;
+                const url = input.value.trim();
                 
-                // Reload folder config from server
-                appState.folderConfig = await apiClient.getFolderConfig();
+                if (!appState.folderConfig[deptId]) {
+                    appState.folderConfig[deptId] = {};
+                }
                 
-                // Close modal and reload table
-                closeFolderConfigModal();
-                loadFolderConfigTable();
-                
-                // Show confirmation
-                showToast('Folder configuration saved successfully!');
-            } catch (error) {
-                showToast(`Error saving configuration: ${error.message}`, 'error');
-            }
+                appState.folderConfig[deptId].sharedUrl = url;
+                if (url !== '') configured = true;
+            });
+            
+            // Mark as configured if either path or URL is provided
+            Object.keys(appState.folderConfig).forEach(deptId => {
+                const path = appState.folderConfig[deptId].path || '';
+                const url = appState.folderConfig[deptId].sharedUrl || '';
+                appState.folderConfig[deptId].configured = (path !== '' || url !== '');
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('auditPortalFolderConfig', JSON.stringify(appState.folderConfig));
+            
+            // Close modal and reload table
+            closeFolderConfigModal();
+            loadFolderConfigTable();
+            
+            // Show confirmation
+            showToast('Folder configuration saved successfully!');
+            
+            // Add activity log
+            addActivity('Updated shared folder configuration for departments', 'system');
         }
         
         // Close folder configuration modal
@@ -2840,6 +3060,9 @@
             }
             
             if (filesAdded > 0) {
+                // Save to localStorage
+                localStorage.setItem('auditPortalUploadedFiles', JSON.stringify(appState.uploadedFiles));
+                
                 // Reload files list
                 loadUploadedFilesForDirector();
                 
@@ -2918,6 +3141,7 @@
                 if (index !== -1) {
                     const fileName = appState.uploadedFiles[deptId][index].name;
                     appState.uploadedFiles[deptId].splice(index, 1);
+                    localStorage.setItem('auditPortalUploadedFiles', JSON.stringify(appState.uploadedFiles));
                     loadUploadedFilesForDirector();
                     loadUploadedFilesForAdmin();
                     showToast(`File "${fileName}" deleted successfully`);
