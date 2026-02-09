@@ -2,16 +2,35 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const fs = require('fs').promises;
+require('dotenv').config();
 const { pool, initializeDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve static files
 app.use(express.static(path.join(__dirname)));
+app.use('/img', express.static(path.join(__dirname, 'img')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+
+// Logging middleware for production
+if (isProduction) {
+    app.use((req, res, next) => {
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+        next();
+    });
+}
 
 
 // Middleware to verify JWT token
@@ -87,6 +106,20 @@ app.post('/api/login', async (req, res) => {
 // Test endpoint
 app.get('/api/test', (req, res) => {
     res.json({ status: 'ok', message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint for requirement submission
+app.post('/api/debug/requirement-submit', verifyToken, (req, res) => {
+    console.log('[DEBUG] Requirement submit attempt');
+    console.log('[DEBUG] Headers:', req.headers);
+    console.log('[DEBUG] Body:', req.body);
+    console.log('[DEBUG] User:', req.user);
+    res.json({
+        received: true,
+        bodyReceived: req.body,
+        userReceived: req.user,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Seed requirements from department files
@@ -378,6 +411,8 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
         const deptId = parseInt(req.params.deptId);
         const reqId = parseInt(req.params.reqId);
         
+        console.log(`[PUT Requirement] DeptID: ${deptId}, ReqID: ${reqId}, Body:`, req.body);
+        
         // Check if user has access to this department
         if (req.user.role === 'director' && req.user.department !== deptId) {
             return res.status(403).json({ error: 'Access denied' });
@@ -387,7 +422,7 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
         
         // Check if department exists
         const [depts] = await connection.execute(
-            'SELECT id FROM departments WHERE id = ?',
+            'SELECT id, name FROM departments WHERE id = ?',
             [deptId]
         );
         
@@ -398,7 +433,7 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
         
         // Check if requirement exists
         const [requirements] = await connection.execute(
-            'SELECT status FROM requirements WHERE id = ? AND departmentId = ?',
+            'SELECT * FROM requirements WHERE id = ? AND departmentId = ?',
             [reqId, deptId]
         );
         
@@ -408,7 +443,16 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
         }
         
         const oldStatus = requirements[0].status;
-        const { status, remarks, receivingDate, files } = req.body;
+        
+        // Only extract valid fields - ignore files since they're uploaded separately
+        let { status, remarks, receivingDate } = req.body;
+        
+        // Sanitize inputs
+        status = status ? String(status).trim() : null;
+        remarks = remarks ? String(remarks).trim() : '';
+        receivingDate = receivingDate ? String(receivingDate).trim() : null;
+        
+        console.log(`[PUT Requirement] Sanitized - Status: ${status}, Remarks: ${remarks}, ReceivingDate: ${receivingDate}`);
         
         const updateQuery = 'UPDATE requirements SET ';
         const updates = [];
@@ -418,7 +462,7 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
             updates.push('status = ?');
             params.push(status);
         }
-        if (remarks !== undefined) {
+        if (remarks) {
             updates.push('remarks = ?');
             params.push(remarks);
         }
@@ -427,13 +471,18 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
             params.push(receivingDate);
         }
         
+        // Always update timestamp
+        updates.push('updatedAt = datetime("now")');
+        
         if (updates.length > 0) {
             params.push(reqId);
             params.push(deptId);
-            await connection.execute(
-                updateQuery + updates.join(', ') + ' WHERE id = ? AND departmentId = ?',
-                params
-            );
+            
+            const sql = updateQuery + updates.join(', ') + ' WHERE id = ? AND departmentId = ?';
+            console.log(`[PUT Requirement] Executing SQL:`, sql, 'with params:', params);
+            
+            await connection.execute(sql, params);
+            console.log(`[PUT Requirement] Update successful`);
         }
         
         if (oldStatus !== status && status) {
@@ -446,12 +495,22 @@ app.put('/api/departments/:deptId/requirements/:reqId', verifyToken, async (req,
             [reqId, deptId]
         );
         
+        // Get files for this requirement
+        const [files] = await connection.execute(
+            'SELECT id, name, type, size, uploaded FROM files WHERE requirementId = ?',
+            [reqId]
+        );
+        
+        const responseData = updatedReq[0] || {};
+        responseData.files = files;
+        
         await connection.release();
         
-        res.json(updatedReq[0]);
+        console.log(`[PUT Requirement] Response:`, responseData);
+        res.json(responseData);
     } catch (error) {
         console.error('Update requirement error:', error);
-        res.status(500).json({ error: 'Failed to update requirement' });
+        res.status(500).json({ error: 'Failed to update requirement: ' + error.message });
     }
 });
 
@@ -575,7 +634,7 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
         
         // Check if department exists
         const [depts] = await connection.execute(
-            'SELECT id FROM departments WHERE id = ?',
+            'SELECT id, name FROM departments WHERE id = ?',
             [deptId]
         );
         
@@ -597,19 +656,69 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
         
         const { files } = req.body;
         
+        console.log(`[File Upload] DeptID: ${deptId}, ReqID: ${reqId}, Files received:`, files ? files.length : 0);
+        
         if (!files || !Array.isArray(files)) {
             await connection.release();
+            console.log(`[File Upload Error] Invalid files data:`, { files, isArray: Array.isArray(files) });
             return res.status(400).json({ error: 'Invalid files data' });
         }
         
+        // Get folder configuration from database (admin-configured path)
+        const [folderConfig] = await connection.execute(
+            'SELECT path FROM folder_config WHERE departmentId = ?',
+            [deptId]
+        );
+        
+        // Determine base path based on admin configuration
+        let baseDir;
+        
+        if (folderConfig.length > 0 && folderConfig[0].path) {
+            // Use admin-configured path
+            const configuredPath = folderConfig[0].path;
+            baseDir = path.join(configuredPath, String(reqId));
+            console.log(`[File Upload] Using configured path: ${baseDir}`);
+        } else {
+            // Fallback to default paths if not configured
+            const departmentName = depts[0].name || `department_${deptId}`;
+            const safeDepartmentName = departmentName
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+                .trim()
+                .replace(/\s+/g, '_');
+            baseDir = path.join('C:\\', safeDepartmentName, String(reqId));
+            console.log(`[File Upload] Using default path: ${baseDir}`);
+        }
+        
+        await fs.mkdir(baseDir, { recursive: true });
+        console.log(`[File Upload] Created directory: ${baseDir}`);
+
         const uploadedFiles = [];
         
         for (const file of files) {
-            const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log(`[File Upload] Processing file:`, { name: file?.name, type: file?.type, size: file?.size, hasData: !!file?.data });
             
+            const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            if (!file || !file.name || !file.data) {
+                await connection.release();
+                console.log(`[File Upload Error] Invalid file data:`, { hasFile: !!file, hasName: !!file?.name, hasData: !!file?.data });
+                return res.status(400).json({ error: 'Invalid files data' });
+            }
+
+            const safeFileName = path.basename(file.name);
+            const filePath = path.join(baseDir, safeFileName);
+
+            const base64Data = String(file.data).includes(',')
+                ? String(file.data).split(',')[1]
+                : String(file.data);
+            const buffer = Buffer.from(base64Data, 'base64');
+
+            console.log(`[File Upload] Writing file: ${filePath}, size: ${buffer.length} bytes`);
+            await fs.writeFile(filePath, buffer);
+
             await connection.execute(
-                'INSERT INTO files (id, requirementId, departmentId, name, type, size, data) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [fileId, reqId, deptId, file.name, file.type, file.size, file.data]
+                'INSERT INTO files (id, requirementId, departmentId, name, type, size, data, path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [fileId, reqId, deptId, safeFileName, file.type, file.size, null, filePath]
             );
             
             uploadedFiles.push({
@@ -617,6 +726,7 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
                 name: file.name,
                 type: file.type,
                 size: file.size,
+                path: filePath,
                 uploaded: new Date().toISOString()
             });
         }
@@ -734,6 +844,85 @@ async function addActivity(message, departmentId, connection) {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Internal server error' });
+});
+
+// Admin endpoint: Test file save
+app.post('/api/admin/test-file-save', async (req, res) => {
+    try {
+        const { path: filePath, content } = req.body;
+        
+        if (!filePath) {
+            return res.status(400).json({ error: 'File path is required' });
+        }
+        
+        // Ensure directory exists
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true });
+        
+        // Write file
+        await fs.writeFile(filePath, content || 'Test file content');
+        
+        // Get file stats
+        const stats = await fs.stat(filePath);
+        
+        res.json({
+            success: true,
+            path: filePath,
+            size: stats.size,
+            created: stats.birthtime
+        });
+    } catch (error) {
+        console.error('File save error:', error);
+        res.status(500).json({ 
+            error: error.message,
+            details: error.code === 'EACCES' ? 'Permission denied - check folder access' : 
+                     error.code === 'ENOENT' ? 'Invalid path' : 
+                     'Failed to save file'
+        });
+    }
+});
+
+// Admin endpoint: Save folder configuration
+app.post('/api/admin/folder-config', async (req, res) => {
+    try {
+        const { folders } = req.body;
+        
+        if (!folders || typeof folders !== 'object') {
+            return res.status(400).json({ error: 'Invalid folders configuration' });
+        }
+        
+        const connection = await pool.getConnection();
+        
+        // Insert or update config for each department
+        for (const [deptId, folderPath] of Object.entries(folders)) {
+            // Check if config exists
+            const [existing] = await connection.execute(
+                'SELECT id FROM folder_config WHERE departmentId = ?',
+                [parseInt(deptId)]
+            );
+            
+            if (existing.length > 0) {
+                // Update existing
+                await connection.execute(
+                    'UPDATE folder_config SET path = ?, configured = 1, updatedAt = CURRENT_TIMESTAMP WHERE departmentId = ?',
+                    [folderPath, parseInt(deptId)]
+                );
+            } else {
+                // Insert new
+                await connection.execute(
+                    'INSERT INTO folder_config (departmentId, path, configured) VALUES (?, ?, 1)',
+                    [parseInt(deptId), folderPath]
+                );
+            }
+        }
+        
+        await connection.release();
+        
+        res.json({ success: true, configured: Object.keys(folders).length });
+    } catch (error) {
+        console.error('Folder config error:', error);
+        res.status(500).json({ error: 'Failed to save folder configuration' });
+    }
 });
 
 // Start server

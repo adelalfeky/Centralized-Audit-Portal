@@ -2014,7 +2014,7 @@
         }
 
         // Handle file upload
-        function handleFileUpload() {
+        async function handleFileUpload() {
             const files = Array.from(fileUpload.files);
             const reqId = appState.currentRequirementId;
             
@@ -2025,10 +2025,10 @@
                 appState.uploadedFiles[reqId] = [];
             }
             
-            files.forEach(file => {
+            for (const file of files) {
                 if (file.size > 10 * 1024 * 1024) {
                     alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-                    return;
+                    continue;
                 }
                 
                 const allowedTypes = ['application/pdf', 'application/msword', 
@@ -2038,25 +2038,41 @@
                 
                 if (!allowedTypes.includes(file.type)) {
                     alert(`File ${file.name} has an unsupported format.`);
-                    return;
+                    continue;
                 }
                 
                 // Create unique file ID
                 const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 
-                // Add to uploaded files
-                appState.uploadedFiles[reqId].push({
-                    id: fileId,
-                    file: file,
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    uploaded: new Date().toISOString()
-                });
-                
-                // Add to file list display
-                addFileToList(fileId, file.name, file.size, file.type);
-            });
+                // Convert file to base64 immediately
+                try {
+                    const base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const result = reader.result;
+                            const base64 = result.includes(',') ? result.split(',')[1] : result;
+                            resolve(base64);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    // Add to uploaded files with base64 data
+                    appState.uploadedFiles[reqId].push({
+                        id: fileId,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        data: base64Data,
+                        uploaded: new Date().toISOString()
+                    });
+                    
+                    // Add to file list display
+                    addFileToList(fileId, file.name, file.size, file.type);
+                } catch (error) {
+                    alert(`Failed to read file ${file.name}: ${error.message}`);
+                }
+            }
             
             // Reset file input
             fileUpload.value = '';
@@ -2239,15 +2255,15 @@
                 // Upload files first if any
                 const uploadedFiles = appState.uploadedFiles[id] || [];
                 if (uploadedFiles.length > 0) {
-                    // Prepare files for upload
-                    const filesToUpload = uploadedFiles.map(f => ({
-                        name: f.name,
-                        type: f.type,
-                        size: f.size,
-                        data: f.file // Store file object, will be handled by API
-                    }));
-                    
-                    await apiClient.uploadFiles(dept.id, id, filesToUpload);
+                    // Files already have base64 data, send them directly
+                    await apiClient.request('POST', `/departments/${dept.id}/requirements/${id}/files`, { 
+                        files: uploadedFiles.map(f => ({
+                            name: f.name,
+                            type: f.type,
+                            size: f.size,
+                            data: f.data
+                        }))
+                    });
                 }
                 
                 // Save requirement status

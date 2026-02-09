@@ -1,0 +1,161 @@
+<html>
+<head>
+    <title>Test Requirement Update</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #f9f9f9; }
+        .form-group { margin: 15px 0; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .message { margin: 20px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #debug-log { background: #000; color: #0f0; padding: 10px; border-radius: 4px; font-family: monospace; max-height: 300px; overflow-y: auto; font-size: 12px; }
+        .log-line { margin: 2px 0; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1><i class="fas fa-flask"></i> Test Requirement Update</h1>
+    
+    <div id="message"></div>
+    
+    <form id="test-form" onsubmit="submitTest(event)">
+        <div class="form-group">
+            <label for="token">Auth Token (optional)</label>
+            <input type="text" id="token" placeholder="Paste JWT token here" />
+            <small>Leave empty if already logged in</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="deptId">Department ID *</label>
+            <input type="number" id="deptId" value="2" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="reqId">Requirement ID *</label>
+            <input type="number" id="reqId" value="5" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status *</label>
+            <select id="status" required>
+                <option value="">-- Select --</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="remarks">Remarks</label>
+            <textarea id="remarks" placeholder="Optional remarks" rows="4"></textarea>
+        </div>
+        
+        <button type="submit"><i class="fas fa-paper-plane"></i> Submit Update</button>
+    </form>
+    
+    <hr />
+    
+    <h3><i class="fas fa-terminal"></i> Debug Log</h3>
+    <div id="debug-log"></div>
+</div>
+
+<script src="js/api-client.js"></script>
+
+<script>
+    // Debug logging
+    const logs = [];
+    
+    function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] ${message}`;
+        logs.push(logEntry);
+        
+        const logDiv = document.getElementById('debug-log');
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.textContent = logEntry;
+        logDiv.appendChild(line);
+        logDiv.scrollTop = logDiv.scrollHeight;
+        
+        console.log(logEntry);
+    }
+    
+    async function submitTest(event) {
+        event.preventDefault();
+        
+        const deptId = parseInt(document.getElementById('deptId').value);
+        const reqId = parseInt(document.getElementById('reqId').value);
+        const status = document.getElementById('status').value;
+        const remarks = document.getElementById('remarks').value;
+        const token = document.getElementById('token').value;
+        
+        log(`Starting update: DeptID=${deptId}, ReqID=${reqId}, Status=${status}`, 'info');
+        log(`Remarks: ${remarks || '(empty)'}`, 'info');
+        
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = '';
+        
+        try {
+            if (!status) {
+                throw new Error('Status is required');
+            }
+            
+            log('Building request body...', 'info');
+            const requestBody = {
+                status: status,
+                remarks: remarks
+            };
+            log(`Request Body: ${JSON.stringify(requestBody)}`, 'info');
+            
+            log('Preparing fetch options...', 'info');
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token || apiClient.getToken()}`
+            };
+            
+            const url = `http://localhost:5000/api/departments/${deptId}/requirements/${reqId}`;
+            log(`URL: ${url}`, 'info');
+            log(`Headers: ${JSON.stringify({...headers, 'Authorization': '***'})}`, 'info');
+            
+            log('Sending PUT request...', 'info');
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(requestBody)
+            });
+            
+            log(`Response status: ${response.status} ${response.statusText}`, 'info');
+            
+            const result = await response.json();
+            log(`Response body: ${JSON.stringify(result)}`, 'info');
+            
+            if (!response.ok) {
+                throw new Error(result.error || `HTTP ${response.status}`);
+            }
+            
+            log('✓ Update successful!', 'info');
+            
+            messageDiv.className = 'message success';
+            messageDiv.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Success!</strong> Requirement updated.`;
+            
+        } catch (error) {
+            log(`❌ Error: ${error.message}`, 'error');
+            
+            messageDiv.className = 'message error';
+            messageDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> ${error.message}`;
+        }
+    }
+    
+    // Initial log
+    log('Test page loaded. Ready to submit.', 'info');
+</script>
+
+</body>
+</html>

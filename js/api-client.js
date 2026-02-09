@@ -131,12 +131,86 @@ class ApiClient {
 
     // ==================== Files ====================
 
-    async uploadFiles(deptId, reqId, files) {
+    /**
+     * Upload files for a requirement
+     * @param {number} deptId - Department ID
+     * @param {number} reqId - Requirement ID
+     * @param {File[]} fileList - Array of File objects from input element
+     * @returns {Promise} Upload result with file details
+     */
+    async uploadFiles(deptId, reqId, fileList) {
+        return this.uploadFilesAsBase64(deptId, reqId, fileList);
+    }
+
+    /**
+     * Upload files as base64 (legacy/fallback method)
+     * @param {number} deptId - Department ID
+     * @param {number} reqId - Requirement ID
+     * @param {File[]} fileList - Array of File objects
+     * @returns {Promise} Upload result
+     */
+    async uploadFilesAsBase64(deptId, reqId, fileList) {
+        const files = [];
+        
+        console.log(`[API] Converting ${fileList.length} files to base64...`);
+        
+        for (const file of Array.from(fileList || [])) {
+            try {
+                const data = await this.fileToBase64(file);
+                console.log(`[API] File ${file.name} converted - size: ${data.length}`);
+                files.push({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: data
+                });
+            } catch (error) {
+                console.error(`[API Error] Failed to convert file ${file.name}:`, error);
+                throw new Error(`Failed to process file ${file.name}: ${error.message}`);
+            }
+        }
+
+        console.log(`[API] Uploading ${files.length} files, total data size: ${files.reduce((sum, f) => sum + f.data.length, 0)} bytes`);
         return this.request('POST', `/departments/${deptId}/requirements/${reqId}/files`, { files });
+    }
+
+    /**
+     * Convert File to base64 string
+     * @private
+     */
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                reject(new Error('File is null or undefined'));
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result;
+                const base64 = result.includes(',') ? result.split(',')[1] : result;
+                console.log(`[API] Converted ${file.name} - base64 length: ${base64.length}`);
+                resolve(base64);
+            };
+            reader.onerror = () => {
+                reject(new Error(`FileReader error: ${reader.error}`));
+            };
+            reader.onabort = () => {
+                reject(new Error('FileReader aborted'));
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     async deleteFile(deptId, reqId, fileId) {
         return this.request('DELETE', `/departments/${deptId}/requirements/${reqId}/files/${fileId}`);
+    }
+
+    /**
+     * Get files for a requirement
+     */
+    async getRequirementFiles(deptId, reqId) {
+        return this.request('GET', `/departments/${deptId}/requirements/${reqId}/files`);
     }
 
     // ==================== Activities ====================

@@ -96,11 +96,19 @@ async function initializeDatabase() {
                 type TEXT,
                 size INTEGER,
                 data BLOB,
+                path TEXT,
                 uploaded DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (requirementId) REFERENCES requirements(id) ON DELETE CASCADE,
                 FOREIGN KEY (departmentId) REFERENCES departments(id) ON DELETE CASCADE
             )
         `);
+
+        // Add missing path column for existing databases
+        const filesColumns = await query('PRAGMA table_info(files)');
+        const hasPathColumn = filesColumns.some((col) => col.name === 'path');
+        if (!hasPathColumn) {
+            await run('ALTER TABLE files ADD COLUMN path TEXT');
+        }
 
         // Create activities table
         await run(`

@@ -24,6 +24,11 @@ Thumbs.db
 logs/
 *.log
 
+# IIS and IISNode
+iisnode/
+*.iisnode
+web.*.config
+
 # Temporary files
 tmp/
 temp/
