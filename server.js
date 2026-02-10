@@ -677,14 +677,13 @@ app.post('/api/departments/:deptId/requirements/:reqId/files', verifyToken, asyn
             .trim()
             .replace(/\s+/g, '_');
         
-        // Create folder name with department and sequence number (SR.NO)
-        const folderName = `${safeDepartmentName}_REQ${sequenceNo || reqId}`;
+        // Create parent folder: Centralized Audit Requirements-[DepartmentName]
+        // Create subfolder: REQ[SequenceNo]-[DepartmentName]
+        const parentFolder = `Centralized Audit Requirements-${safeDepartmentName}`;
+        const subFolder = `REQ${sequenceNo || reqId}-${safeDepartmentName}`;
+        const baseDir = path.join('C:\\', parentFolder, subFolder);
         
-        // Use centralized audit requirement folder
-        const basePath = 'C:\\Centralized Audit Requirement';
-        const baseDir = path.join(basePath, folderName);
-        
-        console.log(`[File Upload] Using centralized path: ${baseDir}`);
+        console.log(`[File Upload] Using path: ${baseDir}`);
         
         await fs.mkdir(baseDir, { recursive: true });
         console.log(`[File Upload] Created directory: ${baseDir}`);
